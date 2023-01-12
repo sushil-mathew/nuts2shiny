@@ -26,15 +26,16 @@ navbarPage("Interactive Maps", id="nav",
                           # Include our custom CSS
                           includeCSS("styles.css")
                         ),
-                        
                         # If not using custom CSS, set height of leafletOutput to a number instead of percent
                         leafletOutput("map", width="100%", height="100%"),
+                      
                         
-                        # Change the adultpop to region, and add a default country and variable
+                        # Panel to select variable
                         absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
                                       draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
                                       width = 330, height = "auto",
                                       selectInput("variable", "Variable", vars, selected = "norm"),
+                                      actionButton(inputId = "reset", label = "Return", class = "btn-primary")
                         ),
                         
                         tags$div(id="cite",

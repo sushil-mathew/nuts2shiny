@@ -12,22 +12,27 @@ library(RColorBrewer)
 library(scales)
 library(lattice)
 library(dplyr)
-
+#library(leafem)
+#library(raster)
 
 function(input, output, session) {
   #colourpalette
   myPal  <- colorNumeric(palette = "Spectral", domain = mydata$values, na.color = "transparent")
   
   #Label on a pop-up window
-  LABELS <- paste(mydata$NAME_LATN, tgs00007_shp$values)
+  LABELS <- paste(mydata$NAME_LATN, mydata$values, mydata$norm)
+  initial_lat = 55
+  initial_lng = 14.5
+  initial_zoom = 3
   
   output$map <- renderLeaflet({
     mydata %>%
     st_transform(crs = 4326) %>%
     leaflet() %>%
       addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
-        setView(lng = 25.5, lat = 45.5, zoom = 6) %>%
+        setView(lng = initial_lng, lat = initial_lat, zoom = initial_zoom) %>%
           addPolygons(weight = 1,
+                      layerId = mydata$NUTS_ID,
                   color = "white",
                   fillColor = ~myPal(values),
                   fillOpacity = 0.7, 
@@ -36,28 +41,18 @@ function(input, output, session) {
                   title = "",
                   opacity = 0.7)
   })
-
-# Show a popup at the given location
-showregPopup <- function(region, lat, lng) {
-  selectedreg <- mydata[mydata$NUTS_ID == NUTS_ID,]
-  content <- as.character(tagList(
-    sprintf("Random data: %s", as.integer(selectedreg$norm)), tags$br(),
-    sprintf("Employment data: %s%%", as.integer(selectedreg$values))
-  ))
-  leafletProxy("map") %>% addPopups(lng, lat, content, layerId = region)
-}
-
-# When map is clicked, show a popup with city info
-observe({
-  leafletProxy("map") %>% clearPopups()
-  event <- input$map_shape_click
-  if (is.null(event))
-    return()
   
-  isolate({
-    showregPopup(event$id, event$lat, event$lng)
+  observe({
+    click <- input$map_shape_click
+    if(is.null(click))
+      return()
+    
+    leafletProxy("map") %>% 
+      setView(lng = click$lng, lat = click$lat, zoom = 6)
   })
-})
-
-
+  
+  
+  observeEvent(input$reset, {
+    leafletProxy("map") %>% setView(lat = initial_lat, lng = initial_lng, zoom = initial_zoom)
+  })
 }
